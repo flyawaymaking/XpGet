@@ -21,12 +21,10 @@ public class XpGetCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 
-        if (!(sender instanceof Player)) {
+        if (!(sender instanceof Player player)) {
             sender.sendMessage("§cЭта команда только для игроков!");
             return true;
         }
-
-        Player player = (Player) sender;
 
         // Проверка прав
         if (!player.hasPermission("xpget.use")) {
@@ -108,9 +106,8 @@ public class XpGetCommand implements CommandExecutor {
 
         // Максимальное количество бутылочек, которое можно создать
         int maxByExp = playerExp / EXP_PER_BOTTLE;
-        int maxByBottles = emptyBottles;
 
-        int maxBottles = Math.min(maxByExp, maxByBottles);
+        int maxBottles = Math.min(maxByExp, emptyBottles);
 
         if (maxBottles <= 0) {
             if (emptyBottles == 0) {
@@ -139,7 +136,7 @@ public class XpGetCommand implements CommandExecutor {
             // Показываем информацию об ограничивающем факторе
             if (actualBottles == maxByExp) {
                 player.sendMessage("§7Ограничено количеством опыта");
-            } else if (actualBottles == maxByBottles) {
+            } else if (actualBottles == emptyBottles) {
             } else {
                 player.sendMessage("§7Ограничено местом в инвентаре");
             }
@@ -163,7 +160,7 @@ public class XpGetCommand implements CommandExecutor {
 
         // Логируем действие для отладки
         plugin.getLogger().info("Игрок " + player.getName() + " конвертировал " +
-                               bottleAmount + " бутылочек (" + requiredExp + " опыта)");
+                bottleAmount + " бутылочек (" + requiredExp + " опыта)");
 
         return true;
     }
