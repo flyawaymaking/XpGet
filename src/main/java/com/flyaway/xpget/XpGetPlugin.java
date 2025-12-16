@@ -6,8 +6,10 @@ public class XpGetPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        // Регистрируем команду с проверкой прав
-        getCommand("xpget").setExecutor(new XpGetCommand(this));
+        XpGetCommand xpGetCommand = new XpGetCommand(this);
+
+        getCommand("xpget").setExecutor(xpGetCommand);
+        getCommand("xpget").setTabCompleter(xpGetCommand);
         getLogger().info("XpGetPlugin включен!");
     }
 

@@ -4,31 +4,42 @@ import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.java.JavaPlugin;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 
-public class XpGetCommand implements CommandExecutor {
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
-    private static final int EXP_PER_BOTTLE = 7; // Опыт за одну бутылочку
+public class XpGetCommand implements CommandExecutor, TabCompleter {
+
     private final JavaPlugin plugin;
+    private final MiniMessage miniMessage = MiniMessage.miniMessage();
+    private int EXP_PER_BOTTLE;
 
     public XpGetCommand(JavaPlugin plugin) {
         this.plugin = plugin;
+        loadConfigValues();
+    }
+
+    private void loadConfigValues() {
+        this.EXP_PER_BOTTLE = plugin.getConfig().getInt("exp-per-bottle", 7);
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 
         if (!(sender instanceof Player player)) {
-            sender.sendMessage("§cЭта команда только для игроков!");
+            sendMessage(sender, "messages.player-only");
             return true;
         }
 
-        // Проверка прав
         if (!player.hasPermission("xpget.use")) {
-            player.sendMessage("§cУ вас нет прав для использования этой команды!");
+            sendMessage(player, "messages.no-permission");
             return true;
         }
 
@@ -37,16 +48,19 @@ public class XpGetCommand implements CommandExecutor {
             return true;
         }
 
-        String amountArg = args[0].toLowerCase();
+        String subCommand = args[0].toLowerCase();
 
-        if (amountArg.equals("max")) {
+        if (subCommand.equals("reload")) {
+            reloadConfigCommand(player);
+            return true;
+        } else if (subCommand.equals("max")) {
             convertMax(player);
         } else {
             try {
-                int amount = Integer.parseInt(amountArg);
+                int amount = Integer.parseInt(subCommand);
                 convertSpecific(player, amount);
             } catch (NumberFormatException e) {
-                player.sendMessage("§cНеверное количество! Используйте число или 'max'");
+                sendMessage(player, "messages.invalid-amount");
                 sendUsage(player);
             }
         }
@@ -54,49 +68,97 @@ public class XpGetCommand implements CommandExecutor {
         return true;
     }
 
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        List<String> completions = new ArrayList<>();
+
+        if (args.length == 1) {
+            List<String> commands = new ArrayList<>();
+            commands.add("max");
+
+            if (sender.hasPermission("xpget.reload")) {
+                commands.add("reload");
+            }
+
+            String input = args[0].toLowerCase();
+            for (String cmd : commands) {
+                if (cmd.startsWith(input)) {
+                    completions.add(cmd);
+                }
+            }
+
+            if (input.isEmpty() || Character.isDigit(input.charAt(0))) {
+                try {
+                    if (input.isEmpty()) {
+                        for (int i : Arrays.asList(1, 5, 10, 16, 32, 64, 128)) {
+                            completions.add(String.valueOf(i));
+                        }
+                    }
+                } catch (NumberFormatException ignored) {
+                }
+            }
+        }
+
+        return completions;
+    }
+
+    private void reloadConfigCommand(Player player) {
+        if (!player.hasPermission("xpget.reload")) {
+            sendMessage(player, "messages.no-permission");
+            return;
+        }
+
+        try {
+            plugin.reloadConfig();
+            loadConfigValues();
+            sendMessage(player, "messages.config-reloaded");
+        } catch (Exception e) {
+            sendMessage(player, "messages.reload-error");
+            plugin.getLogger().severe("Ошибка при перезагрузке конфига: " + e.getMessage());
+        }
+    }
+
     private void sendUsage(Player player) {
-        player.sendMessage("§6Использование: §e/xpget [количество|max]");
-        player.sendMessage("§6Примеры:");
-        player.sendMessage("§e/xpget 10 §7- конвертировать опыт в 10 бутылочек");
-        player.sendMessage("§e/xpget max §7- конвертировать максимально возможное количество");
-        player.sendMessage("§6Примечание: Можно конвертировать любое количество бутылочек");
+        sendMessage(player, "messages.usage");
     }
 
     private void convertSpecific(Player player, int bottleAmount) {
         if (bottleAmount <= 0) {
-            player.sendMessage("§cКоличество должно быть положительным!");
+            sendMessage(player, "messages.positive-amount");
             return;
         }
 
-        // Проверяем, достаточно ли у игрока опыта
         int requiredExp = bottleAmount * EXP_PER_BOTTLE;
         int playerExp = getTotalPlayerExperience(player);
 
         if (playerExp < requiredExp) {
-            player.sendMessage("§cНедостаточно опыта! Нужно: " + requiredExp + " опыта, у вас: " + playerExp);
+            sendMessage(player, "messages.not-enough-exp",
+                    "required", String.valueOf(requiredExp),
+                    "current", String.valueOf(playerExp));
             return;
         }
 
-        // Проверяем, есть ли пустые бутылочки
         int emptyBottles = countEmptyBottles(player.getInventory());
 
         if (emptyBottles < bottleAmount) {
-            player.sendMessage("§cНедостаточно пустых бутылочек! Нужно: " + bottleAmount + ", у вас: " + emptyBottles);
+            sendMessage(player, "messages.not-enough-empty",
+                    "needed", String.valueOf(bottleAmount),
+                    "current", String.valueOf(emptyBottles));
             return;
         }
 
-        // ВАЖНОЕ ИЗМЕНЕНИЕ: Проверяем место с учетом того, что пустые бутылочки освободят место
-        int availableSpace = getAvailableSpaceConsideringReplacement(player.getInventory(), bottleAmount);
+        int availableSpace = getAvailableSpaceConsideringReplacement(player.getInventory());
         if (availableSpace < bottleAmount) {
-            player.sendMessage("§cНедостаточно места в инвентаре! Доступно места для: " + availableSpace + " бутылочек");
+            sendMessage(player, "messages.not-enough-space",
+                    "available", String.valueOf(availableSpace));
             return;
         }
 
-        // Выполняем конвертацию
         if (performConversion(player, bottleAmount)) {
-            player.sendMessage("§aУспешно конвертировано " + bottleAmount + " бутылочек опыта!");
+            sendMessage(player, "messages.success-specific",
+                    "amount", String.valueOf(bottleAmount));
         } else {
-            player.sendMessage("§cПроизошла ошибка при конвертации!");
+            sendMessage(player, "messages.conversion-error");
         }
     }
 
@@ -104,44 +166,44 @@ public class XpGetCommand implements CommandExecutor {
         int playerExp = getTotalPlayerExperience(player);
         int emptyBottles = countEmptyBottles(player.getInventory());
 
-        // Максимальное количество бутылочек, которое можно создать
         int maxByExp = playerExp / EXP_PER_BOTTLE;
-
         int maxBottles = Math.min(maxByExp, emptyBottles);
 
         if (maxBottles <= 0) {
             if (emptyBottles == 0) {
-                player.sendMessage("§cУ вас нет пустых бутылочек!");
+                sendMessage(player, "messages.no-empty-bottles");
             } else {
-                player.sendMessage("§cУ вас недостаточно опыта для создания хотя бы одной бутылочки!");
+                sendMessage(player, "messages.not-enough-exp-for-one");
             }
             return;
         }
 
-        // ВАЖНОЕ ИЗМЕНЕНИЕ: Учитываем доступное место с учетом замены
-        int actualBottles = Math.min(maxBottles, getAvailableSpaceConsideringReplacement(player.getInventory(), maxBottles));
+        int actualBottles = Math.min(maxBottles, getAvailableSpaceConsideringReplacement(player.getInventory()));
 
         if (actualBottles <= 0) {
-            player.sendMessage("§cНедостаточно места в инвентаре даже с учетом замены бутылочек!");
+            sendMessage(player, "messages.not-enough-space-even");
             return;
         }
 
         if (actualBottles < maxBottles) {
-            player.sendMessage("§eВнимание: Конвертировано " + actualBottles + " вместо " + maxBottles + " из-за нехватки места в инвентаре");
+            sendMessage(player, "messages.limited-space",
+                    "actual", String.valueOf(actualBottles),
+                    "max", String.valueOf(maxBottles));
         }
 
         if (performConversion(player, actualBottles)) {
-            player.sendMessage("§aУспешно конвертировано " + actualBottles + " бутылочек опыта!");
+            sendMessage(player, "messages.success-max",
+                    "actual", String.valueOf(actualBottles));
 
-            // Показываем информацию об ограничивающем факторе
             if (actualBottles == maxByExp) {
-                player.sendMessage("§7Ограничено количеством опыта");
+                sendMessage(player, "messages.limited-by-exp");
             } else if (actualBottles == emptyBottles) {
+                sendMessage(player, "messages.limited-by-empty");
             } else {
-                player.sendMessage("§7Ограничено местом в инвентаре");
+                sendMessage(player, "messages.limited-by-space");
             }
         } else {
-            player.sendMessage("§cПроизошла ошибка при конвертации!");
+            sendMessage(player, "messages.conversion-error");
         }
     }
 
@@ -149,51 +211,48 @@ public class XpGetCommand implements CommandExecutor {
         PlayerInventory inventory = player.getInventory();
         int requiredExp = bottleAmount * EXP_PER_BOTTLE;
 
-        // Удаляем пустые бутылочки
         removeEmptyBottles(inventory, bottleAmount);
-
-        // Забираем опыт
         takeExperience(player, requiredExp);
-
-        // Добавляем бутылочки опыта (правильно обрабатываем большое количество)
         addExperienceBottles(inventory, bottleAmount);
-
-        // Логируем действие для отладки
-        plugin.getLogger().info("Игрок " + player.getName() + " конвертировал " +
-                bottleAmount + " бутылочек (" + requiredExp + " опыта)");
-
         return true;
     }
 
-    /**
-     * ВАЖНЫЙ МЕТОД: Рассчитывает доступное место с учетом того, что пустые бутылочки будут заменены на бутылочки опыта
-     */
-    private int getAvailableSpaceConsideringReplacement(PlayerInventory inventory, int bottlesToConvert) {
+    private int getAvailableSpaceConsideringReplacement(PlayerInventory inventory) {
         int availableSpace = 0;
 
-        // Считаем текущее доступное место для бутылочек опыта
         for (ItemStack item : inventory.getContents()) {
             if (item == null) {
-                // Пустой слот может вместить 64 бутылочки
                 availableSpace += 64;
             } else if (item.getType() == Material.EXPERIENCE_BOTTLE && item.getAmount() < 64) {
-                // Существующий стек бутылочек опыта может быть дополнен
                 availableSpace += 64 - item.getAmount();
             } else if (item.getType() == Material.GLASS_BOTTLE) {
-                // Пустая бутылочка будет заменена - это освободит место!
-                // Каждая пустая бутылочка освобождает место для одной бутылочки опыта
                 availableSpace += item.getAmount();
             }
-            // Другие предметы не учитываем - они не освободят место
         }
 
         return availableSpace;
     }
 
+    private void sendMessage(CommandSender sender, String configPath, String... placeholders) {
+        String message = plugin.getConfig().getString(configPath);
+        if (message == null) {
+            message = "<red>Message not found: " + configPath;
+        }
+
+        if (placeholders.length > 0) {
+            for (int i = 0; i < placeholders.length; i += 2) {
+                if (i + 1 < placeholders.length) {
+                    message = message.replace("{" + placeholders[i] + "}", placeholders[i + 1]);
+                }
+            }
+        }
+
+        sender.sendMessage(miniMessage.deserialize(message));
+    }
+
     private void addExperienceBottles(PlayerInventory inventory, int totalAmount) {
         int remaining = totalAmount;
 
-        // Сначала попробуем добавить к существующим стекам бутылочек опыта
         for (int i = 0; i < inventory.getSize(); i++) {
             ItemStack item = inventory.getItem(i);
             if (item != null && item.getType() == Material.EXPERIENCE_BOTTLE && item.getAmount() < 64) {
@@ -205,7 +264,6 @@ public class XpGetCommand implements CommandExecutor {
             }
         }
 
-        // Затем добавляем в пустые слоты
         for (int i = 0; i < inventory.getSize(); i++) {
             if (remaining <= 0) break;
 
@@ -217,7 +275,6 @@ public class XpGetCommand implements CommandExecutor {
             }
         }
 
-        // Если остались бутылочки (маловероятно, но на всякий случай), добавляем через addItem
         if (remaining > 0) {
             while (remaining > 0) {
                 int stackSize = Math.min(64, remaining);
@@ -247,10 +304,10 @@ public class XpGetCommand implements CommandExecutor {
                 int amount = item.getAmount();
 
                 if (amount <= remaining) {
-                    inventory.setItem(i, null); // Полностью удаляем стек
+                    inventory.setItem(i, null);
                     remaining -= amount;
                 } else {
-                    item.setAmount(amount - remaining); // Уменьшаем стек
+                    item.setAmount(amount - remaining);
                     remaining = 0;
                 }
 
@@ -259,16 +316,13 @@ public class XpGetCommand implements CommandExecutor {
         }
     }
 
-    // Методы для работы с опытом (остаются без изменений)
     private int getTotalPlayerExperience(Player player) {
         int level = player.getLevel();
         float progress = player.getExp();
         int totalExp = 0;
 
-        // Добавляем опыт за текущий уровень
         totalExp += Math.round(progress * getExpToNextLevel(level));
 
-        // Добавляем опыт за все предыдущие уровни
         for (int i = 0; i < level; i++) {
             totalExp += getExpToNextLevel(i);
         }
@@ -279,7 +333,6 @@ public class XpGetCommand implements CommandExecutor {
     private void takeExperience(Player player, int expToTake) {
         int currentTotalExp = getTotalPlayerExperience(player);
         int newTotalExp = Math.max(0, currentTotalExp - expToTake);
-
         setTotalExperience(player, newTotalExp);
     }
 
@@ -297,7 +350,6 @@ public class XpGetCommand implements CommandExecutor {
         }
 
         float progress = (float) totalExp / expForNextLevel;
-
         player.setLevel(level);
         player.setExp(progress);
     }
