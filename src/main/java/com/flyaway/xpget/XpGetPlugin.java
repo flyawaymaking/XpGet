@@ -7,6 +7,7 @@ public class XpGetPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         XpGetCommand xpGetCommand = new XpGetCommand(this);
+        saveDefaultConfig();
 
         getCommand("xpget").setExecutor(xpGetCommand);
         getCommand("xpget").setTabCompleter(xpGetCommand);

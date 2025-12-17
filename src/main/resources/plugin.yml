@@ -1,5 +1,5 @@
 name: XpGet
-version: 1.2.0
+version: 1.2.1
 main: com.flyaway.xpget.XpGetPlugin
 api-version: 1.21
 author: FlyAwayMaking
