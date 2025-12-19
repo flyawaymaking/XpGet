@@ -1,5 +1,5 @@
 name: XpGet
-version: 1.2.1
+version: 1.3.0
 main: com.flyaway.xpget.XpGetPlugin
 api-version: 1.21
 author: FlyAwayMaking
@@ -9,7 +9,7 @@ description: Конвертация опыта в бутылочки опыта
 commands:
   xpget:
     description: Конвертировать опыт в бутылочки опыта
-    usage: /xpget [amount/max/reload]
+    usage: /<command> [amount/max/reload]
     permission-message: "<red>У вас нет прав для использования этой команды!"
 
 permissions:

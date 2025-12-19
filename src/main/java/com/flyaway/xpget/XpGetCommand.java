@@ -44,7 +44,7 @@ public class XpGetCommand implements CommandExecutor, TabCompleter {
         }
 
         if (args.length == 0) {
-            sendUsage(player);
+            openXpGetGUI(player);
             return true;
         }
 
@@ -116,6 +116,11 @@ public class XpGetCommand implements CommandExecutor, TabCompleter {
             sendMessage(player, "messages.reload-error");
             plugin.getLogger().severe("Ошибка при перезагрузке конфига: " + e.getMessage());
         }
+    }
+
+    private void openXpGetGUI(Player player) {
+        XpGetGUI gui = new XpGetGUI(player, plugin, this);
+        gui.open();
     }
 
     private void sendUsage(Player player) {

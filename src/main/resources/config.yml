@@ -1,6 +1,54 @@
 # XPGet Configuration
 exp-per-bottle: 7 # Сколько опыта нужно для заполнения одной бутылочки
 
+# GUI Settings
+gui:
+  title: "<gold>Конвертация опыта</gold>"
+
+  close:
+    material: "BARRIER"
+    name: "<red>Закрыть"
+
+  border:
+    material: "GRAY_STAINED_GLASS_PANE"
+    name: "<gray>"
+
+  item-1:
+    material: "EXPERIENCE_BOTTLE"
+    name: "<green>1 бутылочка опыта"
+    lore:
+      - "<gray>Нажмите, чтобы конвертировать"
+      - "<gray>1 бутылочку опыта"
+      - ""
+      - "<yellow>Требуется:"
+      - "<gray>• <white>7 опыта</white>"
+      - "<gray>• <white>1 пустая бутылочка</white>"
+
+  item-64:
+    material: "EXPERIENCE_BOTTLE"
+    amount: 64
+    name: "<yellow>64 бутылочки опыта"
+    lore:
+      - "<gray>Нажмите, чтобы конвертировать"
+      - "<gray>64 бутылочки опыта"
+      - ""
+      - "<yellow>Требуется:"
+      - "<gray>• <white>448 опыта</white>"
+      - "<gray>• <white>64 пустых бутылочки</white>"
+
+  item-max:
+    material: "ENCHANTED_BOOK"
+    name: "<gold>Максимум"
+    lore:
+      - "<gray>Нажмите, чтобы конвертировать"
+      - "<gray>максимально возможное"
+      - "<gray>количество бутылочек"
+      - ""
+      - "<yellow>Будет использовано:"
+      - "<gray>• <white>Весь доступный опыт</white>"
+      - "<gray>• <white>Все пустые бутылочки</white>"
+      - "<gray>• <white>Свободное место в инвентаре</white>"
+
 # MiniMessages format supported
 messages:
   # Общие сообщения
