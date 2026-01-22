@@ -44,7 +44,7 @@ public class MenuHelper {
     }
 
     public boolean isEnabled(@NotNull String path) {
-        return getConfigSection().getBoolean(path, true);
+        return getConfigSection().getBoolean(path + ".enabled", true);
     }
 
     public void setItemToSlot(@NotNull Inventory inv, @NotNull String path, @NotNull ItemStack item) {

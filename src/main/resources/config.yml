@@ -90,6 +90,5 @@ messages:
   not-enough-exp-for-one: "<red>У вас недостаточно опыта для создания хотя бы одной бутылочки!"
   not-enough-space-even: "<red>Недостаточно места в инвентаре даже с учетом замены бутылочек!"
 
-  # Сообщения об успехе
   success-specific: "<green>Успешно конвертировано <yellow>{amount}</yellow> бутылочек опыта!"
   success-max: "<green>Успешно конвертировано <yellow>{actual}</yellow> бутылочек опыта!"

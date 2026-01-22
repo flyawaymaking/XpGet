@@ -29,60 +29,75 @@
 # XPGet Configuration
 exp-per-bottle: 7 # Сколько опыта нужно для заполнения одной бутылочки
 
-# GUI Settings
+# Можно добавлять свои предметы, доступные actions: [close], [cmd]
 gui:
+  size: 27
   title: "<gold>Конвертация опыта</gold>"
 
-  close:
-    material: "BORDER"
-    name: "<red>Закрыть"
-
-  border:
+  divider:
+    enabled: true
     material: "GRAY_STAINED_GLASS_PANE"
     name: "<gray>"
 
-  item-1:
-    material: "EXPERIENCE_BOTTLE"
-    name: "<green>1 бутылочка опыта"
-    lore:
-      - "<gray>Нажмите, чтобы конвертировать"
-      - "<gray>1 бутылочку опыта"
-      - ""
-      - "<yellow>Требуется:"
-      - "<gray>• <white>7 опыта</white>"
-      - "<gray>• <white>1 пустая бутылочка</white>"
+  close:
+    slot: 22
+    material: "BARRIER"
+    name: "<red>Закрыть"
+    actions:
+      - "[close]"
 
-  item-64:
-    material: "EXPERIENCE_BOTTLE"
-    name: "<yellow>64 бутылочки опыта"
-    lore:
-      - "<gray>Нажмите, чтобы конвертировать"
-      - "<gray>64 бутылочки опыта"
-      - ""
-      - "<yellow>Требуется:"
-      - "<gray>• <white>448 опыта</white>"
-      - "<gray>• <white>64 пустых бутылочки</white>"
+  #  main-menu:
+  #    slot: 0
+  #    material: "STONE"
+  #    name: "Main Menu"
+  #    lore:
+  #      - "<yellow>Click to go to main menu"
+  #    actions:
+  #      - "[close]"
+  #      - "[cmd] menu"
 
-  item-max:
-    material: "ENCHANTED_BOOK"
-    name: "<gold>Максимум"
-    lore:
-      - "<gray>Нажмите, чтобы конвертировать"
-      - "<gray>максимально возможное"
-      - "<gray>количество бутылочек"
-      - ""
-      - "<yellow>Будет использовано:"
-      - "<gray>• <white>Весь доступный опыт</white>"
-      - "<gray>• <white>Все пустые бутылочки</white>"
-      - "<gray>• <white>Свободное место в инвентаре</white>"
+  items:
+    one:
+      slot: 11
+      material: "EXPERIENCE_BOTTLE"
+      amount: 1
+      name: "<green>1 бутылочка опыта"
+      lore:
+        - "<gray>Нажмите, чтобы конвертировать"
+        - ""
+        - "<yellow>Требуется:"
+        - "<gray>• <white>{exp} опыта</white>"
+        - "<gray>• <white>1 пустая бутылочка</white>"
 
-# MiniMessages format supported
+    stack:
+      slot: 13
+      material: "EXPERIENCE_BOTTLE"
+      amount: 64
+      name: "<yellow>64 бутылочки опыта"
+      lore:
+        - "<gray>Нажмите, чтобы конвертировать"
+        - ""
+        - "<yellow>Требуется:"
+        - "<gray>• <white>{exp} опыта</white>"
+        - "<gray>• <white>64 пустых бутылочек</white>"
+
+    max:
+      slot: 15
+      material: "ENCHANTED_BOOK"
+      amount: 1
+      name: "<gold>Максимум"
+      lore:
+        - "<gray>Нажмите, чтобы конвертировать"
+        - "<gray>в максимально возможное число бутылочек"
+        - ""
+        - "<yellow>Будет потрачено:"
+        - "<gray>• <white>{exp} опыта</white>"
+        - "<gray>• <white>{max_bottles} пустых бутылочек</white>"
+
 messages:
-  # Общие сообщения
   player-only: "<red>Эта команда только для игроков!"
   no-permission: "<red>У вас нет прав для использования этой команды!"
 
-  # Сообщение об использовании
   usage: |
     <gold>Использование:
     <yellow>/xpget [количество|max]
@@ -91,34 +106,20 @@ messages:
     <yellow>/xpget max <gray>- конвертировать максимально возможное количество
     <gold>Примечание: Можно конвертировать любое количество бутылочек
 
-  # Сообщения команд
   config-reloaded: "<green>Конфигурация успешно перезагружена!"
-  reload-error: "<red>Произошла ошибка при перезагрузке конфигурации!"
 
-  # Сообщения об ошибках
   invalid-amount: "<red>Неверное количество! Используйте число или 'max'"
-  positive-amount: "<red>Количество должно быть положительным!"
+
   not-enough-exp: "<red>Недостаточно опыта! Нужно: <yellow>{required}</yellow> опыта, у вас: <yellow>{current}"
   not-enough-empty: "<red>Недостаточно пустых бутылочек! Нужно: <yellow>{needed}</yellow>, у вас: <yellow>{current}"
   not-enough-space: "<red>Недостаточно места в инвентаре! Доступно места для: <yellow>{available}</yellow> бутылочек"
-  conversion-error: "<red>Произошла ошибка при конвертации!"
 
-  # Сообщения для максимальной конвертации
   no-empty-bottles: "<red>У вас нет пустых бутылочек!"
   not-enough-exp-for-one: "<red>У вас недостаточно опыта для создания хотя бы одной бутылочки!"
   not-enough-space-even: "<red>Недостаточно места в инвентаре даже с учетом замены бутылочек!"
 
-  # Сообщения об успехе
   success-specific: "<green>Успешно конвертировано <yellow>{amount}</yellow> бутылочек опыта!"
   success-max: "<green>Успешно конвертировано <yellow>{actual}</yellow> бутылочек опыта!"
-
-  # Предупреждения
-  limited-space: "<yellow>Внимание: Конвертировано <yellow>{actual}</yellow> вместо <yellow>{max}</yellow> из-за нехватки места в инвентаре"
-
-  # Сообщения об ограничивающих факторах
-  limited-by-exp: "<gray>Ограничено количеством опыта"
-  limited-by-empty: "<gray>Ограничено пустыми бутылочками"
-  limited-by-space: "<gray>Ограничено местом в инвентаре"
 ```
 
 ## 📦 Установка
