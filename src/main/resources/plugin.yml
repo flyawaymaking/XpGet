@@ -1,6 +1,6 @@
-name: XpGet
-version: 1.3.0
-main: com.flyaway.xpget.XpGetPlugin
+name: ${name}
+version: ${version}
+main: ${group}.XpGetPlugin
 api-version: 1.21
 author: FlyAwayMaking
 website: https://github.com/flyawaymaking

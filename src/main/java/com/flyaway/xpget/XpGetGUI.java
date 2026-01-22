@@ -1,122 +1,50 @@
 package com.flyaway.xpget;
 
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
 public class XpGetGUI implements InventoryHolder {
-
-    private final Inventory inventory;
+    private final MenuHelper menuHelper;
+    private Inventory inventory;
     private final Player player;
-    private final JavaPlugin plugin;
-    private final XpGetCommand xpGetCommand;
-    private final MiniMessage miniMessage = MiniMessage.miniMessage();
+    private final XpGetPlugin plugin;
 
-    public XpGetGUI(Player player, JavaPlugin plugin, XpGetCommand xpGetCommand) {
+    public XpGetGUI(Player player, XpGetPlugin plugin) {
         this.player = player;
         this.plugin = plugin;
-        this.xpGetCommand = xpGetCommand;
-        this.inventory = Bukkit.createInventory(this, 27, getTitle());
+        this.menuHelper = new MenuHelper(plugin, "divider", "items");
+        rebuild();
+    }
+
+    private void rebuild() {
+        this.inventory = Bukkit.createInventory(this, menuHelper.getSize(), menuHelper.getTitle());
         initializeItems();
     }
 
-    private Component getTitle() {
-        String title = plugin.getConfig().getString("gui.title", "<gold>Конвертация опыта");
-        return miniMessage.deserialize(title);
-    }
-
     private void initializeItems() {
-        ItemStack item1 = createGuiItem(
-                "gui.item-1.material",
-                "gui.item-1.name",
-                "gui.item-1.lore",
-                "gui.item-1.amount"
-        );
-        inventory.setItem(11, item1);
+        int expPerBottle = plugin.getXpBottleManager().EXP_PER_BOTTLE;
+        int maxBottles = plugin.getXpBottleManager().getMaxBottlesToConvert(player);
+        menuHelper.addItem(inventory, "items.one", "{exp}", String.valueOf(expPerBottle));
+        menuHelper.addItem(inventory, "items.stack", "{exp}", String.valueOf(expPerBottle * 64));
+        menuHelper.addItem(inventory, "items.max",
+                "{exp}", String.valueOf(expPerBottle * maxBottles),
+                "{max_bottles}", String.valueOf(maxBottles));
+        menuHelper.addCustomItems(inventory);
 
-        ItemStack item64 = createGuiItem(
-                "gui.item-64.material",
-                "gui.item-64.name",
-                "gui.item-64.lore",
-                "gui.item-64.amount"
-        );
-        inventory.setItem(13, item64);
-
-        ItemStack itemMax = createGuiItem(
-                "gui.item-max.material",
-                "gui.item-max.name",
-                "gui.item-max.lore",
-                "gui.item-max.amount"
-        );
-        inventory.setItem(15, itemMax);
-
-        ItemStack close = createGuiItem(
-                "gui.close.material",
-                "gui.close.name",
-                "gui.close.lore",
-                "gui.close.amount"
-        );
-        inventory.setItem(22, close);
-
-        ItemStack border = createGuiItem(
-                "gui.border.material",
-                "gui.border.name",
-                "gui.border.lore",
-                "gui.border.amount"
-        );
-
+        if (!menuHelper.isEnabled("divider")) return;
         for (int i = 0; i < inventory.getSize(); i++) {
-            if (inventory.getItem(i) == null) {
-                inventory.setItem(i, border);
-            }
+            if (inventory.getItem(i) != null) continue;
+
+            ItemStack item = menuHelper.createCustomItem("divider");
+            inventory.setItem(i, item);
         }
-    }
-
-    private ItemStack createGuiItem(String materialPath, String namePath, String lorePath, String amountPath) {
-        Material defaultMaterial = Material.STONE;
-        String materialName = plugin.getConfig().getString(materialPath, defaultMaterial.name());
-        Material material;
-        try {
-            material = Material.valueOf(materialName.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            material = defaultMaterial;
-            plugin.getLogger().warning("Invalid material in config: " + materialName + ", using default: " + defaultMaterial);
-        }
-
-        ItemStack item = new ItemStack(material, 1);
-        ItemMeta meta = item.getItemMeta();
-
-        String displayName = plugin.getConfig().getString(namePath, "");
-        if (!displayName.isEmpty()) {
-            meta.displayName(miniMessage.deserialize(displayName));
-        }
-
-        List<String> loreConfig = plugin.getConfig().getStringList(lorePath);
-        if (!loreConfig.isEmpty()) {
-            List<Component> lore = loreConfig.stream()
-                    .map(miniMessage::deserialize)
-                    .toList();
-            meta.lore(lore);
-        }
-
-        int amount = plugin.getConfig().getInt(amountPath, 1);
-        if (amount > 1 & amount <= 64) {
-            item.setAmount(amount);
-        }
-
-        item.setItemMeta(meta);
-        return item;
     }
 
     public void open() {
@@ -126,28 +54,40 @@ public class XpGetGUI implements InventoryHolder {
     public void handleClick(InventoryClickEvent event) {
         event.setCancelled(true);
 
-        if (event.getCurrentItem() == null || event.getCurrentItem().getType() == Material.AIR) {
-            return;
+        ItemStack clickedItem = event.getCurrentItem();
+        if (clickedItem == null) return;
+
+        Inventory clickedInv = event.getClickedInventory();
+
+        if (clickedInv == null || !(clickedInv.getHolder() instanceof XpGetGUI)) return;
+
+        List<String> actions = menuHelper.getItemActions(clickedItem);
+        if (actions == null || actions.isEmpty()) return;
+        Player player = (Player) event.getWhoClicked();
+
+        for (String action : actions) {
+            handleAction(player, action);
         }
+    }
 
-        int slot = event.getSlot();
+    private void handleAction(@NotNull Player player, @NotNull String action) {
+        int idx = action.indexOf(']');
+        if (idx == -1) return;
+        String subAction = action.substring(idx + 1).trim();
 
-        Bukkit.getScheduler().runTask(plugin, () -> {
-            switch (slot) {
-                case 11:
-                    xpGetCommand.onCommand(player, null, "xpget", new String[]{"1"});
-                    break;
-                case 13:
-                    xpGetCommand.onCommand(player, null, "xpget", new String[]{"64"});
-                    break;
-                case 15:
-                    xpGetCommand.onCommand(player, null, "xpget", new String[]{"max"});
-                    break;
-                case 22:
-                    player.closeInventory();
-                    break;
+        if (action.startsWith("[close]")) {
+            player.closeInventory();
+        } else if (action.startsWith("[cmd]")) {
+            player.performCommand(subAction);
+        } else if (action.startsWith("[main-item]")) {
+            switch (subAction) {
+                case "items.one" -> plugin.getXpBottleManager().convertSpecific(player, 1);
+                case "items.stack" -> plugin.getXpBottleManager().convertSpecific(player, 64);
+                case "items.max" -> plugin.getXpBottleManager().convertMax(player);
             }
-        });
+            rebuild();
+            player.openInventory(inventory);
+        }
     }
 
     @Override

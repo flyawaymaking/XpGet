@@ -13,7 +13,7 @@ public class XpGetListener implements Listener {
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
-        InventoryHolder holder = event.getInventory().getHolder();
+        InventoryHolder holder = event.getView().getTopInventory().getHolder();
         
         if (holder instanceof XpGetGUI xpGetGUI) {
             xpGetGUI.handleClick(event);
@@ -22,7 +22,7 @@ public class XpGetListener implements Listener {
 
     @EventHandler
     public void onInventoryDrag(InventoryDragEvent event) {
-        InventoryHolder holder = event.getInventory().getHolder();
+        InventoryHolder holder = event.getView().getTopInventory().getHolder();
         
         if (holder instanceof XpGetGUI) {
             event.setCancelled(true);
