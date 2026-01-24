@@ -25,14 +25,9 @@ public class XpBottleManager {
         int empty = 0;
         int space = 0;
 
-        ItemStack[] contents = inv.getContents();
+        ItemStack[] contents = inv.getStorageContents();
 
-        for (int i = 0; i < contents.length; i++) {
-            if (i == 36 || i == 37 || i == 38 || i == 39 || i == 40) {
-                continue;
-            }
-
-            ItemStack item = contents[i];
+        for (ItemStack item : contents) {
             if (item == null) {
                 space += 64;
             } else if (item.getType() == Material.GLASS_BOTTLE) {
