@@ -55,7 +55,7 @@ public class XpBottleManager {
         int playerExp = player.getTotalExperience();
 
         if (playerExp < requiredExp) {
-            plugin.sendMessage(player, "messages.not-enough-exp",
+            plugin.sendMessage(player, "not-enough-exp",
                     "required", String.valueOf(requiredExp),
                     "current", String.valueOf(playerExp));
             return;
@@ -64,20 +64,20 @@ public class XpBottleManager {
         InventoryStats stats = scanInventory(player.getInventory());
 
         if (stats.emptyBottles() < bottleAmount) {
-            plugin.sendMessage(player, "messages.not-enough-empty",
+            plugin.sendMessage(player, "not-enough-empty",
                     "needed", String.valueOf(bottleAmount),
                     "current", String.valueOf(stats.emptyBottles()));
             return;
         }
 
         if (stats.spaceForXp() < bottleAmount) {
-            plugin.sendMessage(player, "messages.not-enough-space",
+            plugin.sendMessage(player, "not-enough-space",
                     "available", String.valueOf(stats.spaceForXp()));
             return;
         }
 
         performConversion(player, bottleAmount);
-        plugin.sendMessage(player, "messages.success-specific",
+        plugin.sendMessage(player, "success-specific",
                 "amount", String.valueOf(bottleAmount));
     }
 
