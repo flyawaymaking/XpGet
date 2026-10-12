@@ -40,8 +40,16 @@ public class XpBottleManager {
         return new InventoryStats(empty, space);
     }
 
+    /**
+     * Experience the player can actually spend. {@link Player#getTotalExperience()} is not
+     * reduced by enchanting or anvils, so it must never be used as a balance.
+     */
+    public int getCurrentExp(Player player) {
+        return player.calculateTotalExperiencePoints();
+    }
+
     public int getMaxBottlesToConvert(Player player) {
-        int playerExp = player.getTotalExperience();
+        int playerExp = getCurrentExp(player);
         InventoryStats stats = scanInventory(player.getInventory());
 
         int maxByExp = playerExp / EXP_PER_BOTTLE;
@@ -51,8 +59,14 @@ public class XpBottleManager {
     }
 
     public void convertSpecific(Player player, int bottleAmount) {
+        // A negative amount would pass every check below and grant experience.
+        if (bottleAmount <= 0) {
+            plugin.sendMessage(player, "invalid-amount");
+            return;
+        }
+
         int requiredExp = bottleAmount * EXP_PER_BOTTLE;
-        int playerExp = player.getTotalExperience();
+        int playerExp = getCurrentExp(player);
 
         if (playerExp < requiredExp) {
             plugin.sendMessage(player, "not-enough-exp",
@@ -76,13 +90,13 @@ public class XpBottleManager {
             return;
         }
 
-        performConversion(player, bottleAmount);
+        performConversion(player, bottleAmount, playerExp);
         plugin.sendMessage(player, "success-specific",
                 "amount", String.valueOf(bottleAmount));
     }
 
     public void convertMax(Player player) {
-        int playerExp = player.getTotalExperience();
+        int playerExp = getCurrentExp(player);
 
         InventoryStats stats = scanInventory(player.getInventory());
         int maxByExp = playerExp / EXP_PER_BOTTLE;
@@ -103,16 +117,17 @@ public class XpBottleManager {
             return;
         }
 
-        performConversion(player, actualBottles);
+        performConversion(player, actualBottles, playerExp);
         plugin.sendMessage(player, "success-max", "actual", String.valueOf(actualBottles));
     }
 
-    private void performConversion(Player player, int bottleAmount) {
+    private void performConversion(Player player, int bottleAmount, int playerExp) {
         PlayerInventory inventory = player.getInventory();
         int requiredExp = bottleAmount * EXP_PER_BOTTLE;
 
         inventory.removeItem(new ItemStack(Material.GLASS_BOTTLE, bottleAmount));
-        player.giveExp(-requiredExp);
+        // giveExp(-n) clamps at level 0 instead of failing, so set the exact remaining balance.
+        player.setExperienceLevelAndProgress(playerExp - requiredExp);
         Map<Integer, ItemStack> leftoverItems = inventory.addItem(new ItemStack(Material.EXPERIENCE_BOTTLE, bottleAmount));
 
         if (!leftoverItems.isEmpty()) {
