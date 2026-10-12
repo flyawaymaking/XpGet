@@ -71,7 +71,9 @@ public class XpBottleManager {
         if (playerExp < requiredExp) {
             plugin.sendMessage(player, "not-enough-exp",
                     "required", String.valueOf(requiredExp),
-                    "current", String.valueOf(playerExp));
+                    "current", String.valueOf(playerExp),
+                    "level_required", String.valueOf(XpLevels.levelRequiredFor(requiredExp)),
+                    "level", String.valueOf(XpLevels.levelForPoints(playerExp)));
             return;
         }
 

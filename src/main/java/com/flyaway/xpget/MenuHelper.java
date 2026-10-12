@@ -52,11 +52,14 @@ public class MenuHelper {
         if (slot < inv.getSize()) inv.setItem(slot, item);
     }
 
-    public void addItem(@NotNull Inventory inventory, @NotNull String path, @NotNull String... placeholders) {
+    public void addItem(@NotNull Inventory inventory, @NotNull String path, boolean notEnoughExp, @NotNull String... placeholders) {
         if (!getConfigSection().isConfigurationSection(path)) return;
 
         String name = getName(path);
-        List<Component> lore = getLore(path, placeholders);
+        String lorePath = notEnoughExp && getConfigSection().isList(path + ".lore-not-enough-exp")
+                ? path + ".lore-not-enough-exp"
+                : path + ".lore";
+        List<Component> lore = getLoreLines(lorePath, placeholders);
         ItemStack item = getItemStack(path);
 
         applyMetaToItem(item, name, lore, List.of("[main-item] " + path));
@@ -91,7 +94,11 @@ public class MenuHelper {
     }
 
     private @NotNull List<Component> getLore(@NotNull String path, @NotNull String... placeholders) {
-        List<String> loreStrings = getConfigSection().getStringList(path + ".lore");
+        return getLoreLines(path + ".lore", placeholders);
+    }
+
+    private @NotNull List<Component> getLoreLines(@NotNull String lorePath, @NotNull String... placeholders) {
+        List<String> loreStrings = getConfigSection().getStringList(lorePath);
         List<Component> lore = new ArrayList<>();
         for (String loreLine : loreStrings) {
             loreLine = replacePlaceholders(loreLine, placeholders);

@@ -28,6 +28,8 @@ gui:
 #      - "[close]"
 #      - "[cmd] menu"
 
+  # items placeholders: {exp}, {level}, {level_after}, {levels}, {level_required}, {max_bottles}
+  # Optional lore-not-enough-exp replaces lore when the player cannot afford the conversion.
   items:
     one:
       slot: 11
