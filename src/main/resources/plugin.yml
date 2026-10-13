@@ -8,14 +8,14 @@ description: Конвертация опыта в бутылочки опыта
 
 commands:
   xpget:
-    description: Конвертировать опыт в бутылочки опыта
+    description: Convert experience into bottles of experience
     usage: /<command> [amount/max/reload]
-    permission-message: "<red>У вас нет прав для использования этой команды!"
+    permission-message: "<red>You don't have permission to use this command!"
 
 permissions:
   xpget.use:
-    description: Позволяет использовать команду /xpget
+    description: Allows using the /xpget command
     default: true
   xpget.reload:
-    description: Позволяет перезагружать конфигурацию плагина
+    description: Allows reloading the plugin configuration
     default: op

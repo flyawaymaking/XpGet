@@ -29,13 +29,13 @@ public class XpGetGUI implements InventoryHolder {
     }
 
     private void initializeItems() {
-        int expPerBottle = plugin.getXpBottleManager().EXP_PER_BOTTLE;
-        int maxBottles = plugin.getXpBottleManager().getMaxBottlesToConvert(player);
-        menuHelper.addItem(inventory, "items.one", "{exp}", String.valueOf(expPerBottle));
-        menuHelper.addItem(inventory, "items.stack", "{exp}", String.valueOf(expPerBottle * 64));
-        menuHelper.addItem(inventory, "items.max",
-                "{exp}", String.valueOf(expPerBottle * maxBottles),
-                "{max_bottles}", String.valueOf(maxBottles));
+        XpBottleManager manager = plugin.getXpBottleManager();
+        int playerExp = manager.getCurrentExp(player);
+        int maxBottles = manager.getMaxBottlesToConvert(player);
+        addConversionItem("items.one", playerExp, 1);
+        addConversionItem("items.stack", playerExp, 64);
+        addConversionItem("items.max", playerExp, maxBottles);
+
         menuHelper.addCustomItems(inventory);
 
         if (!menuHelper.isEnabled("divider")) return;
@@ -45,6 +45,20 @@ public class XpGetGUI implements InventoryHolder {
             ItemStack item = menuHelper.createCustomItem("divider");
             inventory.setItem(i, item);
         }
+    }
+
+    private void addConversionItem(@NotNull String path, int playerExp, int bottles) {
+        int expPerBottle = plugin.getXpBottleManager().EXP_PER_BOTTLE;
+        int requiredExp = bottles * expPerBottle;
+        int level = XpLevels.levelForPoints(playerExp);
+        boolean enoughExp = playerExp >= Math.max(requiredExp, expPerBottle);
+        int levelAfter = enoughExp ? XpLevels.levelForPoints(playerExp - requiredExp) : level;
+
+        menuHelper.addItem(inventory, path, "{exp}", String.valueOf(requiredExp), "{current_exp}",
+                String.valueOf(playerExp), "{level}", String.valueOf(level), "{level_after}",
+                String.valueOf(levelAfter), "{levels}", String.valueOf(level - levelAfter), "{level_required}",
+                String.valueOf(XpLevels.levelRequiredFor(Math.max(requiredExp, expPerBottle))), "{max_bottles}",
+                String.valueOf(bottles));
     }
 
     public void open() {

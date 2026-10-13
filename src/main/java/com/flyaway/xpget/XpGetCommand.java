@@ -59,9 +59,7 @@ public class XpGetCommand implements CommandExecutor, TabCompleter {
         List<String> completions = new ArrayList<>();
 
         if (args.length == 1) {
-            List<String> commands = sender.hasPermission("xpget.reload")
-                    ? List.of("max", "reload")
-                    : List.of("max");
+            List<String> commands = sender.hasPermission("xpget.reload") ? List.of("max", "reload") : List.of("max");
 
             String input = args[0].toLowerCase();
             for (String cmd : commands) {

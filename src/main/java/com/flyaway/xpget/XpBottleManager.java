@@ -40,8 +40,12 @@ public class XpBottleManager {
         return new InventoryStats(empty, space);
     }
 
+    public int getCurrentExp(Player player) {
+        return player.calculateTotalExperiencePoints();
+    }
+
     public int getMaxBottlesToConvert(Player player) {
-        int playerExp = player.getTotalExperience();
+        int playerExp = getCurrentExp(player);
         InventoryStats stats = scanInventory(player.getInventory());
 
         int maxByExp = playerExp / EXP_PER_BOTTLE;
@@ -51,38 +55,39 @@ public class XpBottleManager {
     }
 
     public void convertSpecific(Player player, int bottleAmount) {
+        if (bottleAmount <= 0) {
+            plugin.sendMessage(player, "invalid-amount");
+            return;
+        }
         int requiredExp = bottleAmount * EXP_PER_BOTTLE;
-        int playerExp = player.getTotalExperience();
+        int playerExp = getCurrentExp(player);
 
         if (playerExp < requiredExp) {
-            plugin.sendMessage(player, "not-enough-exp",
-                    "required", String.valueOf(requiredExp),
-                    "current", String.valueOf(playerExp));
+            plugin.sendMessage(player, "not-enough-exp", "required", String.valueOf(requiredExp), "current",
+                    String.valueOf(playerExp), "level_required", String.valueOf(XpLevels.levelRequiredFor(requiredExp)),
+                    "level", String.valueOf(XpLevels.levelForPoints(playerExp)));
             return;
         }
 
         InventoryStats stats = scanInventory(player.getInventory());
 
         if (stats.emptyBottles() < bottleAmount) {
-            plugin.sendMessage(player, "not-enough-empty",
-                    "needed", String.valueOf(bottleAmount),
-                    "current", String.valueOf(stats.emptyBottles()));
+            plugin.sendMessage(player, "not-enough-empty", "needed", String.valueOf(bottleAmount), "current",
+                    String.valueOf(stats.emptyBottles()));
             return;
         }
 
         if (stats.spaceForXp() < bottleAmount) {
-            plugin.sendMessage(player, "not-enough-space",
-                    "available", String.valueOf(stats.spaceForXp()));
+            plugin.sendMessage(player, "not-enough-space", "available", String.valueOf(stats.spaceForXp()));
             return;
         }
 
         performConversion(player, bottleAmount);
-        plugin.sendMessage(player, "success-specific",
-                "amount", String.valueOf(bottleAmount));
+        plugin.sendMessage(player, "success-specific", "amount", String.valueOf(bottleAmount));
     }
 
     public void convertMax(Player player) {
-        int playerExp = player.getTotalExperience();
+        int playerExp = getCurrentExp(player);
 
         InventoryStats stats = scanInventory(player.getInventory());
         int maxByExp = playerExp / EXP_PER_BOTTLE;
@@ -113,7 +118,8 @@ public class XpBottleManager {
 
         inventory.removeItem(new ItemStack(Material.GLASS_BOTTLE, bottleAmount));
         player.giveExp(-requiredExp);
-        Map<Integer, ItemStack> leftoverItems = inventory.addItem(new ItemStack(Material.EXPERIENCE_BOTTLE, bottleAmount));
+        Map<Integer, ItemStack> leftoverItems = inventory.addItem(
+                new ItemStack(Material.EXPERIENCE_BOTTLE, bottleAmount));
 
         if (!leftoverItems.isEmpty()) {
             Location dropLocation = player.getLocation();

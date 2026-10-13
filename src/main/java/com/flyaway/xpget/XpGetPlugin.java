@@ -21,12 +21,12 @@ public class XpGetPlugin extends JavaPlugin {
 
         getCommand("xpget").setExecutor(xpGetCommand);
         getCommand("xpget").setTabCompleter(xpGetCommand);
-        getLogger().info("XpGetPlugin включен!");
+        getLogger().info("XpGetPlugin enabled!");
     }
 
     @Override
     public void onDisable() {
-        getLogger().info("XpGetPlugin выключен!");
+        getLogger().info("XpGetPlugin disabled!");
     }
 
     private void loadBottleManager() {

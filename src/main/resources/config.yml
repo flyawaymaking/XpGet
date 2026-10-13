@@ -1,10 +1,11 @@
 # XPGet Configuration
-exp-per-bottle: 7 # Сколько опыта нужно для заполнения одной бутылочки
+# How many experience points are required to create one experience bottle.
+# The value is specified in experience points, not levels.
+exp-per-bottle: 7
 
-# Можно добавлять свои предметы, доступные actions: [close], [cmd]
 gui:
   size: 27
-  title: "<gold>Конвертация опыта</gold>"
+  title: "<gold>Experience Conversion</gold>"
 
   divider:
     enabled: true
@@ -14,81 +15,102 @@ gui:
   close:
     slot: 22
     material: "BARRIER"
-    name: "<red>Закрыть"
+    name: "<red>Close"
     actions:
       - "[close]"
 
-#  main-menu:
-#    slot: 0
-#    material: "STONE"
-#    name: "Main Menu"
-#    lore:
-#      - "<yellow>Click to go to main menu"
-#    actions:
-#      - "[close]"
-#      - "[cmd] menu"
+  # Available actions for GUI items:
+  # [close]         - Close the inventory.
+  # [cmd] <command> - Execute a command as the player.
+  #
+  # Available placeholders for conversion items:
+  # {level}          - The player's current level.
+  # {level_after}    - The player's level after conversion.
+  # {levels}         - The difference between the current level and the level after conversion.
+  # {level_required} - The level corresponding to the specified amount of experience points,
+  #                    assuming the player starts with zero experience.
+  # {exp}            - The total number of experience points required for conversion.
+  # {current_exp}    - The player's current total experience points.
+  # {max_bottles}    - The number of bottles selected for conversion.
+  #
+  # Important: experience points and levels are different quantities.
+  # The number of levels lost depends on the player's current level
+  # and their progress toward the next level.
+  #
+  # Example of a custom item:
+  # main-menu:
+  #   slot: 0
+  #   material: "STONE"
+  #   name: "<yellow>Main Menu"
+  #   lore:
+  #     - "<gray>Click to return to the main menu"
+  #   actions:
+  #     - "[close]"
+  #     - "[cmd] menu"
 
   items:
     one:
       slot: 11
       material: "EXPERIENCE_BOTTLE"
       amount: 1
-      name: "<green>1 бутылочка опыта"
+      name: "<green>1 Experience Bottle"
       lore:
-        - "<gray>Нажмите, чтобы конвертировать"
+        - "<gray>Quantity: <white>1 bottle"
+        - "<gray>Cost: <white>{exp} XP"
+        - "<gray>You have: <green>{current_exp} XP"
+        - "<gray>After conversion: <yellow>Lv. {level_after} <dark_gray>(-{levels})"
         - ""
-        - "<yellow>Требуется:"
-        - "<gray>• <white>{exp} опыта</white>"
-        - "<gray>• <white>1 пустая бутылочка</white>"
+        - "<yellow>▶ Click to convert"
 
     stack:
       slot: 13
       material: "EXPERIENCE_BOTTLE"
       amount: 64
-      name: "<yellow>64 бутылочки опыта"
+      name: "<yellow>64 Experience Bottles"
       lore:
-        - "<gray>Нажмите, чтобы конвертировать"
+        - "<gray>Quantity: <white>64 bottles"
+        - "<gray>Cost: <white>{exp} XP"
+        - "<gray>You have: <green>{current_exp} XP"
+        - "<gray>After conversion: <yellow>Lv. {level_after} <dark_gray>(-{levels})"
         - ""
-        - "<yellow>Требуется:"
-        - "<gray>• <white>{exp} опыта</white>"
-        - "<gray>• <white>64 пустых бутылочек</white>"
+        - "<yellow>▶ Click to convert"
 
     max:
       slot: 15
       material: "ENCHANTED_BOOK"
       amount: 1
-      name: "<gold>Максимум"
+      name: "<gold>Maximum"
       lore:
-        - "<gray>Нажмите, чтобы конвертировать"
-        - "<gray>в максимально возможное число бутылочек"
+        - "<gray>Quantity: <white>{max_bottles} bottles"
+        - "<gray>Cost: <white>{exp} XP"
+        - "<gray>You have: <green>{current_exp} XP"
+        - "<gray>After conversion: <yellow>Lv. {level_after} <dark_gray>(-{levels})"
         - ""
-        - "<yellow>Будет потрачено:"
-        - "<gray>• <white>{exp} опыта</white>"
-        - "<gray>• <white>{max_bottles} пустых бутылочек</white>"
+        - "<yellow>▶ Click to convert"
 
 messages:
-  player-only: "<red>Эта команда только для игроков!"
-  no-permission: "<red>У вас нет прав для использования этой команды!"
+  player-only: "<red>This command can only be used by players!"
+  no-permission: "<red>You don't have permission to use this command!"
 
   usage: |
-    <gold>Использование:
-    <yellow>/xpget [количество|max]
-    <gold>Примеры:
-    <yellow>/xpget 10 <gray>- конвертировать опыт в 10 бутылочек
-    <yellow>/xpget max <gray>- конвертировать максимально возможное количество
-    <gold>Примечание: Можно конвертировать любое количество бутылочек
+    <gold>Usage:
+    <yellow>/xpget [amount|max]
+    <gold>Examples:
+    <yellow>/xpget 10 <gray>- convert experience into 10 bottles
+    <yellow>/xpget max <gray>- convert the maximum possible number of bottles
+    <gold>Note: You can convert any number of bottles.
 
-  config-reloaded: "<green>Конфигурация успешно перезагружена!"
+  config-reloaded: "<green>Configuration reloaded successfully!"
 
-  invalid-amount: "<red>Неверное количество! Используйте число или 'max'"
+  invalid-amount: "<red>Invalid amount! Specify a positive number or 'max'."
 
-  not-enough-exp: "<red>Недостаточно опыта! Нужно: <yellow>{required}</yellow> опыта, у вас: <yellow>{current}"
-  not-enough-empty: "<red>Недостаточно пустых бутылочек! Нужно: <yellow>{needed}</yellow>, у вас: <yellow>{current}"
-  not-enough-space: "<red>Недостаточно места в инвентаре! Доступно места для: <yellow>{available}</yellow> бутылочек"
+  not-enough-exp: "<red>Not enough experience! Required: <yellow>{level_required}</yellow> levels of experience. Your current level: <yellow>{level}</yellow>."
+  not-enough-empty: "<red>Not enough empty bottles! Required: <yellow>{needed}</yellow>, you have: <yellow>{current}</yellow>."
+  not-enough-space: "<red>Not enough inventory space! You can fit <yellow>{available}</yellow> more bottles."
 
-  no-empty-bottles: "<red>У вас нет пустых бутылочек!"
-  not-enough-exp-for-one: "<red>У вас недостаточно опыта для создания хотя бы одной бутылочки!"
-  not-enough-space-even: "<red>Недостаточно места в инвентаре даже с учетом замены бутылочек!"
+  no-empty-bottles: "<red>You don't have any empty bottles!"
+  not-enough-exp-for-one: "<red>You don't have enough experience for even one bottle!"
+  not-enough-space-even: "<red>Not enough inventory space to store experience bottles!"
 
-  success-specific: "<green>Успешно конвертировано <yellow>{amount}</yellow> бутылочек опыта!"
-  success-max: "<green>Успешно конвертировано <yellow>{actual}</yellow> бутылочек опыта!"
+  success-specific: "<green>Successfully created <yellow>{amount}</yellow> experience bottles!"
+  success-max: "<green>Successfully created <yellow>{actual}</yellow> experience bottles!"
