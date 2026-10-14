@@ -1,5 +1,8 @@
 # XpGet
 
+[![Modrinth Downloads](https://img.shields.io/modrinth/dt/xpget?logo=modrinth&label=downloads&color=1bd96a)](https://modrinth.com/plugin/xpget)
+[![Modrinth Followers](https://img.shields.io/modrinth/followers/xpget?logo=modrinth&label=followers&color=1bd96a)](https://modrinth.com/plugin/xpget)
+
 Плагин для Paper 1.20.4+ на Java 25, который позволяет конвертировать ваш опыт в бутылочки опыта при наличии пустых стеклянных бутылочек. 
 Поддерживает как фиксированное количество, так и автоматический расчёт максимума.
 Для более удобной конвертации есть GUI интерфейс.
